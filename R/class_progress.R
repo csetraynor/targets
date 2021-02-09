@@ -185,6 +185,19 @@ progress_class <- R6::R6Class(
         warned = self$warned$count
       )
     },
+    filter_patterns = function(data) {
+      is_branch <- data$type == "branch"
+      is_pattern <- data$type == "pattern"
+      is_running <- data$progress == "running"
+      parents <- data$parent[is_running & is_branch]
+      patterns <- data$name[is_running & is_pattern]
+      discard <- setdiff(patterns, parents)
+      data[!(data$name %in% discard),, drop = FALSE] # nolint
+    },
+    read_data = function() {
+      data <- self$database$read_condensed_data()
+      self$filter_patterns(data)
+    },
     validate = function() {
       counter_validate(self$queued)
       counter_validate(self$running)
